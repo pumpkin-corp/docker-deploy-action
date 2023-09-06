@@ -46,13 +46,13 @@ jobs:
       - name: Docker login
         uses: docker/login-action@v2.2.0
         with:
-          registry: 'harbor.pumpkinhouse.io'
+          registry: ${{ inputs.harbor_url }}
           username: ${{ secrets.HARBOR_USERNAME }}
           password: ${{ secrets.HARBOR_PASSWORD }}
     
       # Upload Image to Harbor Instance
       - name: Upload image
         run: |
-          TARGET=harbor.pumpkinhouse.io/${{ inputs.harbor_project }}/${{ inputs.image_name }}:${{ inputs.image_tag }}
+          TARGET=${{ inputs.harbor_url }}/${{ inputs.harbor_project }}/${{ inputs.image_name }}:${{ inputs.image_tag }}
           docker tag ${{ inputs.image_name }} $TARGET
           docker push $TARGET
