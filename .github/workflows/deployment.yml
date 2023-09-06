@@ -17,6 +17,10 @@ on:
       image_name:
         description: 'Name of the docker image'
         required: true
+      image_tag:
+        description: 'Tag of docker image'
+        required: false
+        default: 'latest'
       harbor_project:
         description: 'Name of the harbor project'
         required: true
@@ -29,36 +33,21 @@ jobs:
         with:
           repository: ${{ github.repository_owner }}/${{ inputs.github_repo_name }}
           token: ${{ secrets.ADMIN_TOKEN }}
+          ref: ${{ inputs.branch }}
       # Build Docker Image
       - name: Build image
         run: docker build -t ${{ inputs.image_name }} -f ${{ inputs.dockerfile }} .
 
-      # # Upload Image to Server Instance
-      # - name: Upload image
-      #   uses: appleboy/scp-action@master
-      #   with:
-      #     host: ${{ vars.STAGE_HOST }}
-      #     username: ubuntu
-      #     key: ${{ secrets.STAGE_SSH_KEY }}
-      #     source: ${{ env.IMAGE_NAME }}.tar
-      #     target: images
-      # - name: Deploy image
-      #   uses: appleboy/ssh-action@master
-      #   with:
-      #     host: ${{ vars.STAGE_HOST }}
-      #     username: ubuntu
-      #     key: ${{ secrets.STAGE_SSH_KEY }}
-      #     script: |
-      #       docker stop ${{ env.IMAGE_NAME }}
-      #       docker rm ${{ env.IMAGE_NAME }}
-      #       docker rmi ${{ env.IMAGE_NAME }}
-      #       docker load -i images/${{ env.IMAGE_NAME }}.tar
-      #       PORT=${{ env.PORT }}
-      #       TARGETPORT=${{ env.TARGETPORT }}
-      #       DATABASE_URL=${{ secrets.DATABASE_URL }}
-      #       docker run --rm -d \
-      #         --name ${{ env.IMAGE_NAME }} \
-      #         -p $PORT:$TARGETPORT \
-      #         -e PORT=$TARGETPORT \
-      #         -e DATABASE_URL="$DATABASE_URL" \
-      #         ${{ env.IMAGE_NAME }}
+      - name: Docker login
+        uses: docker/login-action@v2.2.0
+        with:
+          registry: 'harbor.pumpkinhouse.io'
+          username: ${{ secrets.HARBOR_USERNAME }}
+          password: ${{ secrets.HARBOR_PASSWORD }}
+    
+      # Upload Image to Harbor Instance
+      - name: Upload image
+        run: |
+          TARGET=harbor.pumpkinhouse.io/${{ inputs.harbor_project }}/${{ inputs.image_name }}:${{ inputs.image_tag }}
+          docker tag ${{ inputs.image_name }} $TARGET
+          docker push $TARGET
