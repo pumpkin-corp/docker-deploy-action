@@ -6,6 +6,10 @@ on:
       github_repo_name:
         description: 'Name of the github repo to build'
         required: true
+      branch:
+        description: 'Name of the github branch'
+        required: false
+        default: 'main'
       dockerfile:
         description: 'Path to the dockerfile'
         required: false
