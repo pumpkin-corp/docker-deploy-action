@@ -21,6 +21,10 @@ on:
         description: 'Tag of docker image'
         required: false
         default: 'latest'
+      harbor_url:
+        description: 'Url to the harbor repository'
+        required: false
+        default: 'harbor.kooki.io'
       harbor_project:
         description: 'Name of the harbor project'
         required: true
