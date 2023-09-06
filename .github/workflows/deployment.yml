@@ -1,0 +1,60 @@
+name: harbor-build-upload
+run-name: Deploy stage (${{ github.ref_name }})
+on:
+  workflow_dispatch:
+    inputs:
+      github_repo_name:
+        description: 'Name of the github repo to build'
+        required: true
+      dockerfile:
+        description: 'Path to the dockerfile'
+        required: false
+        default: 'Dockerfile'
+      image_name:
+        description: 'Name of the docker image'
+        required: true
+      harbor_project:
+        description: 'Name of the harbor project'
+        required: true
+jobs:
+  build-deploy:
+    runs-on: ubuntu-latest
+    steps:
+      # Checkout Git Repo
+      - uses: actions/checkout@v4
+        with:
+          repository: ${{ github.repository_owner }}/${{ inputs.github_repo_name }}
+          token: ${{ secrets.ADMIN_TOKEN }}
+      # Build Docker Image
+      - name: Build image
+        run: docker build -t ${{ inputs.image_name }} -f ${{ inputs.dockerfile }} .
+
+      # # Upload Image to Server Instance
+      # - name: Upload image
+      #   uses: appleboy/scp-action@master
+      #   with:
+      #     host: ${{ vars.STAGE_HOST }}
+      #     username: ubuntu
+      #     key: ${{ secrets.STAGE_SSH_KEY }}
+      #     source: ${{ env.IMAGE_NAME }}.tar
+      #     target: images
+      # - name: Deploy image
+      #   uses: appleboy/ssh-action@master
+      #   with:
+      #     host: ${{ vars.STAGE_HOST }}
+      #     username: ubuntu
+      #     key: ${{ secrets.STAGE_SSH_KEY }}
+      #     script: |
+      #       docker stop ${{ env.IMAGE_NAME }}
+      #       docker rm ${{ env.IMAGE_NAME }}
+      #       docker rmi ${{ env.IMAGE_NAME }}
+      #       docker load -i images/${{ env.IMAGE_NAME }}.tar
+      #       PORT=${{ env.PORT }}
+      #       TARGETPORT=${{ env.TARGETPORT }}
+      #       DATABASE_URL=${{ secrets.DATABASE_URL }}
+      #       docker run --rm -d \
+      #         --name ${{ env.IMAGE_NAME }} \
+      #         -p $PORT:$TARGETPORT \
+      #         -e PORT=$TARGETPORT \
+      #         -e DATABASE_URL="$DATABASE_URL" \
+      #         ${{ env.IMAGE_NAME }}
