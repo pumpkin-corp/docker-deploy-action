@@ -34,6 +34,7 @@ jobs:
           repository: ${{ github.repository_owner }}/${{ inputs.github_repo_name }}
           token: ${{ secrets.ADMIN_TOKEN }}
           ref: ${{ inputs.branch }}
+          submodules: 'recursive'
       # Build Docker Image
       - name: Build image
         run: docker build -t ${{ inputs.image_name }} -f ${{ inputs.dockerfile }} .
